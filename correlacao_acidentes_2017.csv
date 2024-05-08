@@ -1,0 +1,10 @@
+tipo,unico,auto,moto,ciclom,ciclista,pedestre,onibus,caminhao,viatura,outros
+auto,0,5493,2322,69,76,107,1475,977,92,61
+moto,0,2322,163,6,28,92,125,66,18,4
+ciclom,0,69,6,1,0,2,4,5,0,0
+ciclista,0,76,28,0,2,2,24,5,0,0
+pedestre,0,107,92,2,2,13,58,3,0,0
+onibus,0,1475,125,4,24,58,27,49,9,8
+caminhao,0,977,66,5,5,3,49,23,10,6
+viatura,0,92,18,0,0,0,9,10,4,2
+outros,0,61,4,0,0,0,8,6,2,0
