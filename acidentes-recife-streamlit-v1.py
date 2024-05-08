@@ -1,17 +1,10 @@
+
 import pandas as pd
-import numpy as np
 import streamlit as st
 import altair as alt
-import leafmap.foliumap as leafmap
-import geopandas as gpd
-import folium
-
-st.set_page_config(layout="wide")
 
 # Definir o título fixo para o painel
-st.title("Acidentes em Recife de 2015 a 2023")
-
-st.sidebar.markdown("# Filtros:")
+st.title("Acidentes-Recife (2015 a 2023)")
 
 #Carregando os dados
 df_final = pd.read_csv('acidentes_2015_2023_preprocessado.csv', sep=',', decimal='.', parse_dates=['data'])
@@ -21,6 +14,7 @@ df_final['natureza_acidente'].fillna('NÃO INFORMADO', inplace=True)
 
 # Preencher os valores ausentes na coluna 'tipo' com 'NÃO INFORMADO'
 df_final['tipo'].fillna('NÃO INFORMADO', inplace=True)
+
 
 # Adiciona uma caixa de seleção no sidebar
 ano_selecionado = st.sidebar.selectbox(
@@ -90,13 +84,12 @@ with tab01:
     # Calcular a contagem de ocorrências para cada ano e natureza do acidente
     contagem_anos_natureza = df_filtrado.groupby(['Ano', 'natureza_acidente']).size().reset_index(name='Quantidade')
 
+
     # Criar o gráfico de barras empilhadas com Altair
     grafico_barras_empilhadas = alt.Chart(contagem_anos_natureza).mark_bar().encode(
         x=alt.X('Ano:N', title='Ano'),
         y=alt.Y('sum(Quantidade):Q', title='Quantidade de Registros'),
-#       color=alt.Color('natureza_acidente:N', title='Natureza do Acidente', scale=alt.Scale(range=['#d7191c','#fdae61','#abd9e9','#2c7bb6']) ),
-#       color=alt.Color('natureza_acidente:N', title='Natureza do Acidente', scale=alt.Scale(range=['#e41a1c','#377eb8','#4daf4a','#984ea3']) ),
-        color=alt.Color('natureza_acidente:N', title='Natureza do Acidente', scale=alt.Scale(range=['#ff3616','#38d0c0','#4daf4a','#984ea3']) ),
+        color=alt.Color('natureza_acidente:N', title='Natureza do Acidente', scale=alt.Scale(range=['#d7191c','#fdae61','#abd9e9','#2c7bb6']) ),
         tooltip=['Ano', 'natureza_acidente', 'Quantidade']
     ).properties(
         width=800,
@@ -113,7 +106,7 @@ with tab01:
     st.altair_chart(grafico_barras_empilhadas )
 
 with tab02:
-
+   
     # Calcular a contagem de ocorrências para cada variação da natureza do acidente
     contagem_natureza_acidente = df_filtrado['tipo'].value_counts().reset_index()
     contagem_natureza_acidente.columns = ['Tipo do Acidente', 'Quantidade']
@@ -122,14 +115,14 @@ with tab02:
         range=[
         '#007bff', '#28a745', '#ffc107', '#dc3545', '#6c757d', '#d95b43', '#5bc0de', '#4caf50', '#ffeb3b', '#c497d9',
         '#00BFFF','#32CD32','#FF00FF','#FFA500','#5A87E8','#00CED1','#FF7F50','#228B22','#FFD700','#000080'
-        ])
+        ])                            
 
     # Criar o gráfico de barras horizontais com Altair
     grafico = alt.Chart(contagem_natureza_acidente).mark_bar().encode(
         y=alt.Y('Tipo do Acidente:N', title='Tipo do Acidente', sort='-x', axis=alt.Axis(labelLimit=200)),
         x=alt.X('Quantidade:Q', title='Quantidade de Registros'),
         tooltip=['Tipo do Acidente', 'Quantidade'],
-        color=alt.Color('Tipo do Acidente:N', scale=lista_cores, legend=None)
+        color=alt.Color('Tipo do Acidente:N', scale=lista_cores)
     )
 
     # Adicionar os valores de quantidade nas barras
@@ -230,69 +223,36 @@ with tab04:
 
 with tab05:
 
+
     #========================================================
     def lista_agrupamento_acidentes_ano(df_acidentes, qtd_registros):
       df_agrupado = df_acidentes.groupby(['bairro']).size().reset_index(name='qtd_acidentes')
       df_ordenado = df_agrupado.sort_values(by=['qtd_acidentes'], ascending=False)
-      return df_ordenado[:qtd_registros], df_ordenado
+      return df_ordenado[:qtd_registros]
     #========================================================
 
     # Ano Selecionado
-    lista_acidentes, lista_todos = lista_agrupamento_acidentes_ano(df_filtrado, 10)
+    lista_acidentes = lista_agrupamento_acidentes_ano(df_filtrado, 10)
 
     # Criação da escala de cores
     escala_cores = alt.Scale(domain=lista_acidentes['bairro'].unique(),
                           range=['#007bff', '#28a745', '#ffc107', '#dc3545', '#6c757d', '#d95b43', '#5bc0de', '#4caf50', '#ffeb3b', '#c497d9'])
 
-    # Criar duas colunas para colocar os componentes lado a lado
-    col1, col2, col3 = st.columns([1,2,2])
+    # ====================================================
+    titulo=f'Acidentes Agrupados por Bairros -Top 10 ({ano_selecionado})'
 
-    # Adicionar o gráfico à primeira coluna
-    with col1:
-        st.dataframe(lista_todos)
-        #st.write(lista_todos)
+    graf_bairros = alt.Chart(lista_acidentes, title=titulo).mark_bar(color='green').encode(
+        y=alt.Y('bairro:N', title='Bairro', sort='-x'),
+        x=alt.X('qtd_acidentes:Q', title='Quantidade de Acidentes'),
+        color=alt.Color('bairro:N', scale=escala_cores)
+    ).properties(
+        width=800, height=600
+    )
 
-    # Adicionar o gráfico à primeira coluna
-    with col2:
+    # ====================================================
 
-
-        # ====================================================
-        titulo=f'Acidentes Agrupados por Bairros -Top 10 ({ano_selecionado})'
-
-        #graf_bairros = alt.Chart(lista_acidentes, title=titulo).mark_bar(color='green').encode(
-        graf_bairros = alt.Chart(lista_acidentes).mark_bar(color='green').encode(
-            y=alt.Y('bairro:N', title='Bairro', sort='-x'),
-            x=alt.X('qtd_acidentes:Q', title='Quantidade de Acidentes'),
-            color=alt.Color('bairro:N', scale=escala_cores, legend=None)
-        ).properties(
-            width=600, height=600
-        )
-
-        st.altair_chart(graf_bairros)
-
-        # ====================================================
-
-    # Adicionar o mapa à segunda coluna
-    with col3:
-        # Mesclar os DataFrames df_bairros e contagem_acidentes usando um left join
-        df_bairros = pd.read_csv('bairros_centrais.csv')
-        df_bairros = pd.merge(lista_acidentes, df_bairros, on='bairro', how='left')
-        df_bairros = df_bairros.sort_values(by=['qtd_acidentes'], ascending=False)
-        #st.dataframe(df_bairros)
-
-        cores_top10 = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6c757d', '#d95b43', '#5bc0de', '#4caf50', '#ffeb3b', '#c497d9']
-
-        # Atribuir cores diferentes para os 10 primeiros registros
-        for i in range(10):
-            df_bairros.loc[i, 'cor'] = cores_top10[i]
-            df_bairros.loc[i, 'tamanho'] = (10-i)*50
-
-        st.map(df_bairros,
-            latitude='latitude_central',
-            longitude='longitude_central',
-            size='tamanho',
-            color='cor',
-            use_container_width=False)
+    # Exibir o gráfico de calor
+    st.altair_chart(graf_bairros)
 
 with tab06:
 
@@ -318,30 +278,22 @@ with tab06:
     st.markdown(titulo, unsafe_allow_html=True)
 
     # Conteúdo HTML das legendas
-    legendas = ['<br><br><span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#00FF00;margin-right:5px;"></span> Nenhum acidente reportado',
+    legendas = ['<span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#00FF00;margin-right:5px;"></span> Nenhum acidente reportado',
                 '<span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#FFFF00;margin-right:5px;"></span> Entre 1 e 10 acidentes',
                 '<span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#FF0000;margin-right:5px;"></span> Mais de 10 acidentes']
 
-    # Criar duas colunas para colocar os componentes lado a lado
-    col1, col2 = st.columns([8,2])
+    # Exibir o quadro com as legendas
+    st.markdown('<br>'.join(legendas), unsafe_allow_html=True)
 
-    # Adicionar o gráfico à primeira coluna
-    with col1:
+    df_semaforos = pd.read_csv('semaforos-geo-acidentes.csv', sep=';', decimal='.')
 
-        df_semaforos = pd.read_csv('semaforos-geo-acidentes.csv', sep=';', decimal='.')
+    # Aplicar a função para criar a nova coluna 'cor'
+    df_semaforos['cor'] = df_semaforos[coluna_dados].apply(definir_cor)
 
-        # Aplicar a função para criar a nova coluna 'cor'
-        df_semaforos['cor'] = df_semaforos[coluna_dados].apply(definir_cor)
-
-        st.map(df_semaforos,
-            latitude='latitude',
-            longitude='longitude',
-            size=coluna_dados,
-            color='cor',
-            use_container_width=False)
-
-    with col2:
-
-        # Exibir o quadro com as legendas
-        st.markdown('<br>'.join(legendas), unsafe_allow_html=True)
+    st.map(df_semaforos,
+        latitude='latitude',
+        longitude='longitude',
+        size=coluna_dados,
+        color='cor',
+        use_container_width=False)
 
