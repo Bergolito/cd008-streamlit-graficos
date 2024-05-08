@@ -1,10 +1,7 @@
 
 import pandas as pd
-import numpy as np
 import streamlit as st
 import altair as alt
-import leafmap.foliumap as leafmap
-
 
 # Definir o título fixo para o painel
 st.title("Acidentes-Recife (2015 a 2023)")
