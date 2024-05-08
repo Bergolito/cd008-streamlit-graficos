@@ -1,10 +1,7 @@
 
 import pandas as pd
-import numpy as np
 import streamlit as st
 import altair as alt
-import leafmap.foliumap as leafmap
-
 
 # Definir o título fixo para o painel
 st.title("Acidentes-Recife (2015 a 2023)")
@@ -87,11 +84,16 @@ with tab01:
     # Calcular a contagem de ocorrências para cada ano e natureza do acidente
     contagem_anos_natureza = df_filtrado.groupby(['Ano', 'natureza_acidente']).size().reset_index(name='Quantidade')
 
+    #escala_cores = alt.Scale(domain=lista_acidentes['bairro'].unique(),
+    #                      range=['#007bff', '#28a745', '#ffc107', '#dc3545', '#6c757d', '#d95b43', '#5bc0de', '#4caf50', '#ffeb3b', '#c497d9'])
 
     # Criar o gráfico de barras empilhadas com Altair
     grafico_barras_empilhadas = alt.Chart(contagem_anos_natureza).mark_bar().encode(
         x=alt.X('Ano:N', title='Ano'),
         y=alt.Y('sum(Quantidade):Q', title='Quantidade de Registros'),
+        #color=alt.Color('natureza_acidente:N', title='Natureza do Acidente', scale=alt.Scale(scheme='yellowgreenblue') ),
+        #                                                                                           ['#d7191c','#fdae61','#abd9e9','#2c7bb6']  
+        #color=alt.Color('natureza_acidente:N', title='Natureza do Acidente', scale=alt.Scale(range=['#007bff', '#28a745', '#ffc107', '#dc3545']) ),
         color=alt.Color('natureza_acidente:N', title='Natureza do Acidente', scale=alt.Scale(range=['#d7191c','#fdae61','#abd9e9','#2c7bb6']) ),
         tooltip=['Ano', 'natureza_acidente', 'Quantidade']
     ).properties(
@@ -109,23 +111,16 @@ with tab01:
     st.altair_chart(grafico_barras_empilhadas )
 
 with tab02:
-   
+
     # Calcular a contagem de ocorrências para cada variação da natureza do acidente
     contagem_natureza_acidente = df_filtrado['tipo'].value_counts().reset_index()
     contagem_natureza_acidente.columns = ['Tipo do Acidente', 'Quantidade']
-
-    lista_cores = alt.Scale(domain= df_filtrado['tipo'].unique(),
-        range=[
-        '#007bff', '#28a745', '#ffc107', '#dc3545', '#6c757d', '#d95b43', '#5bc0de', '#4caf50', '#ffeb3b', '#c497d9',
-        '#00BFFF','#32CD32','#FF00FF','#FFA500','#5A87E8','#00CED1','#FF7F50','#228B22','#FFD700','#000080'
-        ])                            
 
     # Criar o gráfico de barras horizontais com Altair
     grafico = alt.Chart(contagem_natureza_acidente).mark_bar().encode(
         y=alt.Y('Tipo do Acidente:N', title='Tipo do Acidente', sort='-x', axis=alt.Axis(labelLimit=200)),
         x=alt.X('Quantidade:Q', title='Quantidade de Registros'),
-        tooltip=['Tipo do Acidente', 'Quantidade'],
-        color=alt.Color('Tipo do Acidente:N', scale=lista_cores)
+        tooltip=['Tipo do Acidente', 'Quantidade']
     )
 
     # Adicionar os valores de quantidade nas barras
@@ -144,8 +139,7 @@ with tab02:
     grafico_final = grafico_com_texto.properties(
         width=800,
         height=600,
-        title=f'Acidentes por Tipo ({ano_selecionado})',
-
+        title=f'Acidentes por Tipo ({ano_selecionado})'
     ).configure_axis(
         labelFontSize=12,
         titleFontSize=14
@@ -206,7 +200,7 @@ with tab04:
     # Criar o gráfico de calor com Altair
     grafico_calor = alt.Chart(contagem_anos_natureza).mark_rect().encode(
         x=alt.X('Ano:N', title='Ano'),
-        y=alt.Y('tipo:N', title='Tipo do Acidente', sort='-x', axis=alt.Axis(labelLimit=200)),
+        y=alt.Y('tipo:N', title='Tipo do Acidente', sort='-x'),
         color=alt.Color('Quantidade:Q', title='Quantidade de Registros', scale=alt.Scale(scheme='yellowgreenblue')),
         tooltip=['Ano', 'tipo', 'Quantidade']
     ).properties(
