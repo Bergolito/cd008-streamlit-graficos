@@ -2,9 +2,9 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 import altair as alt
-import leafmap.foliumap as leafmap
-import geopandas as gpd
-import folium
+#import leafmap.foliumap as leafmap
+#import geopandas as gpd
+#import folium
 
 st.set_page_config(layout="wide")
 
