@@ -1,10 +1,6 @@
 import pandas as pd
-import numpy as np
 import streamlit as st
 import altair as alt
-import leafmap.foliumap as leafmap
-import geopandas as gpd
-import folium
 
 st.set_page_config(layout="wide")
 
@@ -87,60 +83,30 @@ tab01, tab02, tab03, tab04, tab05, tab06 = st.tabs(["Natureza", "Tipo", "Envolvi
 
 with tab01:
 
-    titulo = f'Quantidade de Registros por Ano e Natureza do Acidente ({ano_selecionado})'
-    st.markdown(titulo, unsafe_allow_html=True)
-
     # Calcular a contagem de ocorrências para cada ano e natureza do acidente
     contagem_anos_natureza = df_filtrado.groupby(['Ano', 'natureza_acidente']).size().reset_index(name='Quantidade')
 
-    # Criar duas colunas para colocar os componentes lado a lado
-    col1, col2 = st.columns([10,8])
+    # Criar o gráfico de barras empilhadas com Altair
+    grafico_barras_empilhadas = alt.Chart(contagem_anos_natureza).mark_bar().encode(
+        x=alt.X('Ano:N', title='Ano'),
+        y=alt.Y('sum(Quantidade):Q', title='Quantidade de Registros'),
+#       color=alt.Color('natureza_acidente:N', title='Natureza do Acidente', scale=alt.Scale(range=['#d7191c','#fdae61','#abd9e9','#2c7bb6']) ),
+#       color=alt.Color('natureza_acidente:N', title='Natureza do Acidente', scale=alt.Scale(range=['#e41a1c','#377eb8','#4daf4a','#984ea3']) ),
+        color=alt.Color('natureza_acidente:N', title='Natureza do Acidente', scale=alt.Scale(range=['#ff3616','#38d0c0','#4daf4a','#984ea3']) ),
+        tooltip=['Ano', 'natureza_acidente', 'Quantidade']
+    ).properties(
+        width=800,
+        height=600,
+        title=f'Quantidade de Registros por Ano e Natureza do Acidente ({ano_selecionado})'
+    ).configure_axis(
+        labelFontSize=12,
+        titleFontSize=14
+    ).configure_title(
+        fontSize=16
+    )
 
-    # Adicionar o gráfico à primeira coluna
-    with col1:
-        # Criar o gráfico de barras empilhadas com Altair
-        grafico_barras_empilhadas = alt.Chart(contagem_anos_natureza).mark_bar().encode(
-            x=alt.X('Ano:N', title='Ano'),
-            y=alt.Y('sum(Quantidade):Q', title='Quantidade de Registros'),
-            color=alt.Color('natureza_acidente:N', title='Natureza do Acidente', scale=alt.Scale(range=['#ff3616','#38d0c0','#4daf4a','#984ea3']) ),
-            tooltip=['Ano', 'natureza_acidente', 'Quantidade']
-        ).properties(
-            width=800,
-            height=600
-        ).configure_axis(
-            labelFontSize=12,
-            titleFontSize=14
-        ).configure_title(
-            fontSize=16
-        )
-
-        # Exibir o gráfico de barras empilhadas
-        st.altair_chart(grafico_barras_empilhadas )
-
-    # Adicionar o gráfico à segunda coluna
-    with col2:
-
-        if ano_selecionado=='geral':
-            # Cores relacionadas às naturezas dos acidentes
-            cores_natureza = {
-                'COM VÍTIMA': '#ff3616',
-                'NÃO INFORMADO': '#38d0c0',
-                'SEM VÍTIMA': '#4daf4a',
-                'VÍTIMA FATAL': '#984ea3'
-            }
-
-            # Criar o gráfico de linhas com Altair
-            grafico_linhas = alt.Chart(contagem_anos_natureza).mark_line().encode(
-                x=alt.X('Ano:N', title='Ano'),
-                y=alt.Y('Quantidade:Q', title='Quantidade'),
-                color=alt.Color('natureza_acidente:N', title='Natureza do Acidente', scale=alt.Scale(domain=list(cores_natureza.keys()), range=list(cores_natureza.values())), legend=None)
-            ).properties(
-                width=600,
-                height=600
-            )
-
-            # Exibir o gráfico de barras empilhadas
-            st.altair_chart(grafico_linhas )
+    # Exibir o gráfico de barras empilhadas
+    st.altair_chart(grafico_barras_empilhadas )
 
 with tab02:
 
@@ -279,14 +245,8 @@ with tab05:
 
     # Adicionar o gráfico à primeira coluna
     with col1:
-
-        lista_todos = lista_todos.rename(columns={'bairro': 'Bairros', 'qtd_acidentes': 'Acidentes'})
-
-        # Substituir os valores nos bairros específicos
-        bairros_substituidos = ['IPESEP', 'FABIO', 'MARCELO', '0', '']
-        lista_todos['Bairros'] = lista_todos['Bairros'].replace(bairros_substituidos, 'NÃO INFORMADO')
-
-        st.dataframe(lista_todos.set_index('Bairros'))
+        st.dataframe(lista_todos)
+        #st.write(lista_todos)
 
     # Adicionar o gráfico à primeira coluna
     with col2:
